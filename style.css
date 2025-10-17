@@ -19,10 +19,63 @@ html {
     /* smooth font rendering */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color: white;
 }
 
 body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Enable View Transitions */
+@view-transition {
+    navigation: auto;
+}
+
+/* View Transition Animations */
+::view-transition-old(page-one),
+::view-transition-old(page-two),
+::view-transition-old(page-three),
+::view-transition-old(page-four) {
+    animation: smooth-fade-out 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    mix-blend-mode: normal;
+}
+
+::view-transition-new(page-one),
+::view-transition-new(page-two),
+::view-transition-new(page-three),
+::view-transition-new(page-four) {
+    animation: smooth-fade-in 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-group(page-one),
+::view-transition-group(page-two),
+::view-transition-group(page-three),
+::view-transition-group(page-four) {
+    animation-duration: 500ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+}
+
+@keyframes smooth-fade-in {
+    from {
+        opacity: 0.3;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes smooth-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.3;
+    }
 }
 
 svg,
@@ -46,27 +99,215 @@ h1 {
 
 /* components */
 
-.nav__list {}
+.nav__list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 2rem;
+    width: 80vw;
+    height: 80vh;
+    margin: 0;
+}
 
-.nav__item {}
+.nav__item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    isolation: isolate;
+}
 
-.nav__link {}
+.nav__link {
+    text-decoration: none;
+    color: white;
+    padding: 2rem;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 1rem;
+    font-size: 2rem;
+    font-weight: 900;
+    transition: transform 0.3s ease, opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav__link:hover {
+    transform: scale(1.05);
+}
+
+/* Fade out other buttons during view transition */
+html:has(:any-link:active) .nav__link:not(:active) {
+    opacity: 0.3;
+}
+
+
 
 /* give the links a different background color */
 
-.page {}
-
 /* give the pages a different background color */
 
-.page--one {}
+.nav__link--one {
+    background-color: var(--color-purple);
+    view-transition-name: page-one;
+}
+.nav__link--two {
+    background-color: var(--color-pink);
+    view-transition-name: page-two;
+}
+.nav__link--three {
+    background-color: var(--color-yellow);
+    view-transition-name: page-three;
+}
+.nav__link--four {
+    background-color: var(--color-ocean);
+    view-transition-name: page-four;
+}
+.page {
+    width: 80vw;
+    height: 80vh;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+}
 
-.page--two {}
+.page--one {
+    background-color: var(--color-purple);
+    view-transition-name: page-one;
+}
 
-.page--three {}
+.page--two {
+    background-color: var(--color-pink);
+    view-transition-name: page-two;
+}
 
-.page--four {}
+.page--three {
+    background-color: var(--color-yellow);
+    view-transition-name: page-three;
+}
 
-.page__back {}
+.page--four {
+    background-color: var(--color-ocean);
+    view-transition-name: page-four;
+}
 
-.page__body,
-.page__back {}
+.page__body {
+    text-align: center;
+    animation: fade-in-content 100ms ease-out 400ms backwards;
+}
+
+.page__body p {
+    animation: fade-in-content 100ms ease-out 400ms backwards;
+}
+
+.page__back {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background-color: white;
+    color: black;
+    text-decoration: none;
+    padding: 0.75rem;
+    border: 0.1rem solid black;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    width: 3rem;
+    height: 3rem;
+    animation: rotate-in 100ms ease-out 400ms backwards;
+}
+
+.page__close {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: black;
+}
+
+/* Apply animations on forward navigation (entering page) */
+@supports (view-transition-name: none) {
+    .page__close {
+        animation: x-rotate-in 100ms ease-out 400ms backwards;
+    }
+}
+
+@keyframes rotate-in {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+        transform: rotate(180deg);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes x-rotate-in {
+    from {
+        transform: rotate(180deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes fade-in-content {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Reverse animations when navigating back */
+@media (prefers-reduced-motion: no-preference) {
+    html:active-view-transition-type(back) .page__back {
+        animation: rotate-out 100ms ease-in forwards;
+    }
+    
+    html:active-view-transition-type(back) .page__close {
+        animation: x-rotate-out 100ms ease-in forwards;
+    }
+    
+    html:active-view-transition-type(back) .page__body,
+    html:active-view-transition-type(back) .page__body p {
+        animation: fade-out-content 100ms ease-in forwards;
+    }
+}
+
+@keyframes rotate-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+}
+
+@keyframes x-rotate-out {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(45deg);
+    }
+}
+
+@keyframes fade-out-content {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}

@@ -40,7 +40,7 @@ body {
 ::view-transition-old(page-two),
 ::view-transition-old(page-three),
 ::view-transition-old(page-four) {
-    animation: smooth-fade-out 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    animation: smooth-fade-out 250ms cubic-bezier(0.4, 0, 0.2, 1);
     mix-blend-mode: normal;
 }
 
@@ -48,14 +48,14 @@ body {
 ::view-transition-new(page-two),
 ::view-transition-new(page-three),
 ::view-transition-new(page-four) {
-    animation: smooth-fade-in 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    animation: smooth-fade-in 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 ::view-transition-group(page-one),
 ::view-transition-group(page-two),
 ::view-transition-group(page-three),
 ::view-transition-group(page-four) {
-    animation-duration: 500ms;
+    animation-duration: 250ms;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 9999;
 }
@@ -107,14 +107,18 @@ h1 {
     width: 80vw;
     height: 80vh;
     margin: 0;
+    /* establish a stacking context for the grid so z-index on children is reliable */
+    isolation: isolate;
 }
 
 .nav__item {
     display: flex;
     justify-content: center;
     align-items: center;
-    isolation: isolate;
 }
+
+/* cleanup accidental token left in file */
+/* ...existing code... */
 
 .nav__link {
     text-decoration: none;
@@ -129,6 +133,10 @@ h1 {
     font-size: 2rem;
     font-weight: 900;
     transition: transform 0.3s ease, opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* ensure links participate in stacking order inside the isolated grid */
+    position: relative;
+    z-index: 1;
+    will-change: opacity, transform;
 }
 
 .nav__link:hover {
@@ -136,8 +144,29 @@ h1 {
 }
 
 /* Fade out other buttons during view transition */
-html:has(:any-link:active) .nav__link:not(:active) {
-    opacity: 0.3;
+
+/* When a link becomes active or receives focus (keyboard/assistive),
+   immediately hide all other links by snapping their opacity to 0.
+   We remove opacity transitions for that instant so the hide is immediate. */
+html:has(.nav__link:active) .nav__link:not(:active),
+html:has(.nav__link:focus) .nav__link:not(:focus),
+html:has(.nav__link:focus-visible) .nav__link:not(:focus-visible) {
+    opacity: 0 !important;
+    pointer-events: none;
+    /* keep transform transition but remove opacity transition to make opacity snap */
+    transition: transform 0.3s ease !important;
+}
+
+/* put the active/focused link above others inside the isolated stacking context */
+.nav__link:active,
+.nav__link:focus,
+.nav__link:focus-visible {
+    z-index: 10;
+}
+
+/* ensure pages appear above the grid during transitions */
+.page {
+    z-index: 1000;
 }
 
 
@@ -207,26 +236,34 @@ html:has(:any-link:active) .nav__link:not(:active) {
     position: absolute;
     top: 2rem;
     right: 2rem;
-    background-color: white;
-    color: black;
+    background-color: transparent;
+    color: white;
     text-decoration: none;
-    padding: 0.75rem;
-    border: 0.1rem solid black;
-    border-radius: 0.5rem;
+    border-radius: 999px; /* make it a pill/circle */
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0;
-    width: 3rem;
-    height: 3rem;
+    width: 3.2rem;
+    height: 3.2rem;
     animation: rotate-in 100ms ease-out 400ms backwards;
 }
 
 .page__close {
-    width: 1.5rem;
-    height: 1.5rem;
-    color: black;
+    width: 100%; /* make the X bigger */
+    height: 100%;
+    color: white;
+    background: transparent; /* ensure no background on the X itself */
+    display: block;
+    margin: 0;
+    transition: transform 200ms ease, transform 120ms cubic-bezier(0.2,0,0,1);
+}
+
+/* Rotate the X on hover/focus for a playful interaction */
+.page__back:hover .page__close,
+.page__back:focus-visible .page__close {
+    transform: rotate(90deg) scale(1.05);
 }
 
 /* Apply animations on forward navigation (entering page) */
